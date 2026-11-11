@@ -4,6 +4,11 @@ import { extractAndStoreMemories, retrieveRelevantMemories } from "@/lib/memory"
 import { prisma } from "@/lib/prisma";
 import { getTemporalContext } from "@/lib/temporal";
 
+// Multi-round tool-calling (Gemini + up to 2 Tavily searches) can legitimately take 15-20+
+// seconds; raise the serverless function's timeout above Vercel's default so a genuine
+// in-progress response isn't killed mid-stream. 60s is the max allowed on the Hobby tier.
+export const maxDuration = 60;
+
 const TITLE_MAX_LENGTH = 60;
 
 function deriveTitle(message: string): string {
