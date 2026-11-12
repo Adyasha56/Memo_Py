@@ -22,6 +22,20 @@ html {
   color-scheme: light;
 }
 
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Same five named colors, re-tuned so each still reads correctly against a dark canvas. */
+  --color-mist: #1b2420;
+  --color-leaf: #6fae6a;
+  --color-sage: #8fcb86;
+  --color-olive: #a9b38f;
+  --color-charcoal: #eef3ea;
+  --color-surface: #232b22;
+  --color-canvas: #171f16;
+  --color-rail: #10150f;
+}
+
 body {
   background-color: var(--color-canvas);
   color: var(--color-charcoal);

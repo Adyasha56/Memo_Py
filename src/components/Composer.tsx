@@ -17,7 +17,7 @@ export function Composer({
     setValue(e.target.value);
     const el = e.target;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
   }
 
   function submit() {
@@ -51,7 +51,7 @@ export function Composer({
         onKeyDown={handleKeyDown}
         placeholder="Message MemoPy"
         disabled={disabled}
-        className="max-h-40 flex-1 resize-none bg-transparent text-[15px] text-charcoal placeholder:text-olive/60 focus:outline-none disabled:opacity-60"
+        className="max-h-50 flex-1 resize-none overflow-y-auto bg-transparent py-1 text-[15px] leading-6 text-charcoal placeholder:text-olive/60 focus:outline-none disabled:opacity-60"
       />
       <button
         type="submit"

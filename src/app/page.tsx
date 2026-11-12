@@ -64,11 +64,36 @@ export default function Home() {
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+  // Lazy initializer (not an effect) so the client's first render already reflects the
+  // persisted preference, matching what the blocking <head> script in layout.tsx already
+  // applied to the DOM before paint.
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    try {
+      const stored = localStorage.getItem("theme");
+      if (stored === "dark" || stored === "light") return stored;
+    } catch {
+      // localStorage unavailable (private browsing, etc.) — default theme stands.
+    }
+    return "light";
+  });
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     refreshConversations();
   }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {
+      // Not persisted this session; no functional impact.
+    }
+  }, [theme]);
+
+  function handleToggleTheme() {
+    setTheme((t) => (t === "dark" ? "light" : "dark"));
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -194,13 +219,33 @@ export default function Home() {
     setMessages([]);
   }
 
+  async function handleDeleteConversation(id: string) {
+    const previous = conversations;
+    setConversations((prev) => prev.filter((c) => c.id !== id));
+    if (id === conversationId) {
+      setConversationId(null);
+      setMessages([]);
+    }
+
+    try {
+      const res = await fetch(`/api/conversations/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete conversation");
+    } catch (err) {
+      console.error(err);
+      setConversations(previous);
+    }
+  }
+
   return (
     <div className="flex h-full flex-1 flex-col md:flex-row">
       <Sidebar
         conversations={conversations}
         activeId={conversationId}
+        theme={theme}
         onNewChat={handleNewChat}
         onSelect={handleSelectConversation}
+        onDelete={handleDeleteConversation}
+        onToggleTheme={handleToggleTheme}
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -212,7 +257,7 @@ export default function Home() {
           ) : messages.length === 0 ? (
             <EmptyState onPick={handleSend} />
           ) : (
-            <div className="mx-auto flex max-w-2xl flex-col gap-5 px-4 py-6">
+            <div className="mx-auto flex max-w-2xl flex-col gap-5 px-4 py-4">
               {messages.map((m) =>
                 m.role === "assistant" && m.status === "streaming" && m.content === "" ? (
                   <TypingDots key={m.id} />
@@ -225,7 +270,7 @@ export default function Home() {
           )}
         </div>
 
-        <div className="border-t border-olive/15 px-4 py-4">
+        <div className="border-t border-olive/15 px-3 py-3">
           <div className="mx-auto max-w-2xl">
             <Composer disabled={isStreaming} onSend={handleSend} />
           </div>
